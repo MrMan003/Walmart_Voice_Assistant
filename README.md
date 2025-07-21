@@ -41,10 +41,6 @@ Then open `http://localhost:3000` in your browser.
 * **APIs**: Web Speech API
 * **Architecture**: Single Page Application (SPA)
 
-##  Screenshots
-
-> *(Include screenshots or a demo GIF here if available)*
-
 ##  Accessibility First
 
 This application was built with an "Accessibility First" mindset to ensure no one feels left behind while shopping. It serves:
