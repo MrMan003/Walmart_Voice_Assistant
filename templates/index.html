@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Walmart Voice Assistant</title>
+  <style>
+    :root {
+      --primary: #0072ff;
+      --secondary: #00c6ff;
+      --bg-light: rgba(255, 255, 255, 0.95);
+      --text-dark: #333;
+      --text-light: #fff;
+      --border-color: #ccc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://png.pngtree.com/thumb_back/fw800/background/20230518/pngtree-an-empty-grocery-store-aisle-lit-up-at-night-in-the-image_2585080.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text-light);
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 30px;
+      background: rgba(0, 0, 0, 0.85);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      transition: box-shadow 0.3s ease-in-out;
+    }
+
+    .header-left, .header-right {
+      display: flex;
+      font-family: arial, sans-serif;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .header-center {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      flex-grow: 1;
+      font-size: 2.2rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .header-center img {
+      height: 48px;
+    }
+
+    .mic-button {
+      background-color: rgba(245, 245, 220, 0.08);
+      border: 2px solid rgba(245, 245, 220, 0.3);
+      border-radius: 50%;
+      width: 400px;
+      height: 400px;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(245, 245, 220, 0.1), 0 0 40px rgba(245, 245, 220, 0.05) inset;
+      position: fixed;
+      left: 50%;
+      top: 55%;
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease-in-out;
+      z-index: 500;
+      display: none;
+      animation: pulseGlow 2.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(245, 245, 220, 0.3); }
+      70% { box-shadow: 0 0 0 40px rgba(245, 245, 220, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 245, 220, 0); }
+    }
+
+    .mic-button:hover {
+      transform: translate(-50%, -50%) scale(1.05);
+      background-color: rgba(245, 245, 220, 0.12);
+    }
+
+    .hamburger {
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    #minimap-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 160px;
+    }
+
+    #minimap {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  width: 520px;
+  height: 520px;
+  padding: 5px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+  display: none;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 4px;
+  transition: all 0.4s ease;
+}
+
+.cell {
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  transition: transform 0.25s ease;
+  backdrop-filter: blur(4px);
+  position: relative;
+}
+
+.cell:hover {
+  transform: scale(1.05);
+  z-index: 2;
+}
+
+/* Aisle cells */
+.aisle {
+  background: linear-gradient(to bottom, #e9f3ff, #cde5ff);
+  color: #003366;
+  font-weight: bold;
+}
+
+/* Entrance */
+.entrance {
+  background: linear-gradient(to right, #28a745, #218838);
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: 0 0 8px rgba(40,167,69,0.6);
+}
+
+/* Start / End / Path */
+.start {
+  background: radial-gradient(circle at center, green 30%, #006400);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.6);
+}
+
+.end {
+  background: radial-gradient(circle at center, blue 30%, #000080);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 0 8px rgba(0, 0, 255, 0.6);
+}
+
+.path {
+  background: linear-gradient(to right, #ff4b2b, #ff416c);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 0 6px rgba(255, 65, 108, 0.5);
+}
+
+    .sidebar {
+      position: fixed;
+      right: -300px;
+      top: 60px;
+      width: 300px;
+      height: calc(100% - 60px);
+      background: rgba(34, 34, 34, 0.9);
+      color: white;
+      overflow-y: auto;
+      padding: 15px;
+      transition: right 0.3s ease;
+      z-index: 999;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+    }
+
+    .sidebar.show {
+      right: 0;
+    }
+
+    .search-entry {
+      background: #333;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .search-entry:hover {
+      background: #444;
+    }
+
+    /* 🌟 Left & Right Ambient Blurs */
+    .glow-blur-left, .glow-blur-right {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 120px;
+      filter: blur(90px);
+      opacity: 0.12;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .glow-blur-left {
+      left: 0;
+      background: radial-gradient(circle, #00c6ff, transparent);
+    }
+
+    .glow-blur-right {
+      right: 0;
+      background: radial-gradient(circle, #0072ff, transparent);
+    }
+
+    audio { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- 🔮 Decorative Ambient Blur -->
+<div class="glow-blur-left"></div>
+<div class="glow-blur-right"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    contact@walmartlocal.com
+  </div>
+  <div class="header-center">
+    <img src="https://i.pinimg.com/736x/7f/cc/f5/7fccf5504fcded7cd53536f0079a47ba.jpg" alt="logo">
+    Walmart Voice Assistant
+  </div>
+  <div class="header-right">
+    <div class="hamburger" onclick="toggleSidebar()">☰</div>
+  </div>
+</header>
+
+<!-- MIC FORM -->
+<form method="POST">
+  <input type="hidden" name="voice_text" id="voice_text">
+  <button type="button" class="mic-button" id="micBtn" onclick="startRecording()"></button>
+  <button type="submit" style="display:none;" id="submitVoice"></button>
+</form>
+
+<!-- AUDIO PLAYER -->
+ {% if play_welcome %}
+  <audio id="welcome-audio" autoplay>
+    <source src="{{ url_for('static', filename='audio/welcome.mp3') }}" type="audio/mp3">
+  </audio>
+{% endif %}
+
+{% if audio_url %}
+  <audio id="voicePlayer" autoplay hidden>
+    <source src="{{ audio_url }}" type="audio/mp3">
+  </audio>
+{% endif %}
+<!-- MAP WRAPPER -->
+{% if route_coords %}
+  <div id="minimap-wrapper">
+    <div id="minimap" aria-label="Store Map Grid"></div>
+  </div>
+{% endif %}
+
+<!-- SIDEBAR -->
+<div id="sidebar" class="sidebar">
+  <h3>Previous Searches</h3>
+  {% for chat in session.get('chat_history', []) %}
+    <div class="search-entry" onclick="alert('{{ chat.bot.directions | safe }}')">
+      <strong>User:</strong> {{ chat.user }}<br>
+      <small>Products: {{ chat.bot.products|join(', ') }}<br>Aisles: {{ chat.bot.aisles|join(', ') }}</small>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- SCRIPT -->
+<script>
+function toggleSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.toggle("show");
+}
+
+function startRecording() {
+  const mic = document.getElementById("micBtn");
+  mic.style.display = "none";
+
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    document.getElementById('voice_text').value = event.results[0][0].transcript;
+    document.getElementById('submitVoice').click();
+  };
+
+  recognition.onerror = function(event) {
+    alert('Voice error: ' + event.error);
+    mic.style.display = "block";
+  };
+}
+
+window.onload = function () {
+  const player = document.getElementById("voicePlayer");
+  const minimap = document.getElementById("minimap");
+  const mic = document.getElementById("micBtn");
+
+  
+
+  {% if route_coords %}
+    const path = {{ route_coords | safe }};
+    const storeGrid = [
+      ['entrance', '_', 'A1', '_', 'A2', '_', 'A3', '_', '_', '_'],
+      ['_', '_', '_', '_', '_', '_', '_', '_', '_', '_'],
+      ['_', '_', 'B1', '_', 'B2', '_', 'B3', '_', '_', '_'],
+      ['_', '_', '_', '_', '_', '_', '_', '_', '_', '_'],
+      ['_', '_', 'C1', '_', 'C2', '_', 'C3', '_', '_', '_'],
+      ['_', '_', '_', '_', '_', '_', '_', '_', '_', '_'],
+      ['_', '_', 'D1', '_', 'D2', '_', 'D3', '_', '_', '_'],
+      ['_', '_', '_', '_', '_', '_', '_', '_', '_', '_']
+    ];
+
+    minimap.style.display = "grid";
+
+    for (let r = 0; r < storeGrid.length; r++) {
+      for (let c = 0; c < storeGrid[0].length; c++) {
+        const cellDiv = document.createElement('div');
+        cellDiv.className = 'cell';
+        const value = storeGrid[r][c];
+        if (value.toLowerCase() === 'entrance') {
+          cellDiv.classList.add('entrance');
+          cellDiv.textContent = 'Entrance';
+        } else if (value !== '_') {
+          cellDiv.classList.add('aisle');
+          cellDiv.textContent = value;
+        }
+        cellDiv.dataset.row = r;
+        cellDiv.dataset.col = c;
+        minimap.appendChild(cellDiv);
+      }
+    }
+
+    path.forEach((pos, index) => {
+      const selector = `.cell[data-row="${pos.z}"][data-col="${pos.x}"]`;
+      const cell = document.querySelector(selector);
+      if (cell) {
+        if (index === 0) cell.classList.add('start');
+        else if (index === path.length - 1) cell.classList.add('end');
+        else cell.classList.add('path');
+      }
+    });
+
+    if (player) {
+      player.onended = function () {
+        minimap.style.display = "none";
+        mic.style.display = "block";
+      };
+    } else {
+      setTimeout(() => {
+        minimap.style.display = "none";
+        mic.style.display = "block";
+      }, 6000);
+    }
+  {% else %}
+    mic.style.display = "block";
+  {% endif %}
+};
+
+</script>
+
+</body>
+</html>
